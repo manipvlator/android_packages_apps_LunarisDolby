@@ -88,6 +88,7 @@
     <string name="dolby_preset_movie">Film</string>
     <string name="dolby_preset_rb">R&amp;B</string>
     <string name="dolby_preset_vocal">Peningkat Vokal</string>
+    <string name="dolby_preset_horeg">Horeg</string>
     <string name="dolby_preset_custom">Kustom</string>
     <string name="equalizer">Equalizer</string>
     <string name="advanced">Lanjutan</string>

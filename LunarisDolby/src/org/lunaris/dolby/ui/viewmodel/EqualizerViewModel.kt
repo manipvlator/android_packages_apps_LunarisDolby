@@ -96,7 +96,11 @@ class EqualizerViewModel(application: Application) : AndroidViewModel(applicatio
                 
                 val builtInPresets = getBuiltInPresets(currentBandMode)
                 val userPresets = repository.getUserPresets()
-                val allPresets = userPresets + builtInPresets
+                // A user preset with the same name wins over the built-in one, so
+                // importing a preset that is also bundled doesn't show duplicates.
+                val userPresetNames = userPresets.mapTo(HashSet()) { it.name }
+                val allPresets = userPresets +
+                    builtInPresets.filter { it.name !in userPresetNames }
                 
                 val currentPresetName = repository.getPresetName(currentProfile)
                 
