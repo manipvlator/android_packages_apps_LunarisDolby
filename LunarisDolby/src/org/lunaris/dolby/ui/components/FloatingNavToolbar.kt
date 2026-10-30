@@ -7,9 +7,15 @@
 
 package org.lunaris.dolby.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,8 +36,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.lunaris.dolby.R
@@ -50,7 +58,9 @@ fun FloatingNavToolbar(
     val selectedIndex = routes.indexOf(currentRoute).coerceAtLeast(0)
 
     Surface(
-        modifier = modifier.widthIn(max = 280.dp),
+        modifier = modifier
+            .widthIn(max = 440.dp)
+            .animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec()),
         shape = RoundedCornerShape(32.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shadowElevation = 0.dp,
@@ -62,6 +72,7 @@ fun FloatingNavToolbar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             routes.forEachIndexed { index, route ->
+                val selected = selectedIndex == index
                 NavToolbarItem(
                     icon = when (route) {
                         "equalizer" -> Icons.Rounded.GraphicEq
@@ -73,7 +84,7 @@ fun FloatingNavToolbar(
                         "advanced" -> R.string.advanced
                         else -> R.string.home
                     }),
-                    selected = selectedIndex == index,
+                    selected = selected,
                     onClick = {
                         if (route != currentRoute) {
                             scope.launch {
@@ -82,7 +93,6 @@ fun FloatingNavToolbar(
                             onNavigate(route)
                         }
                     },
-                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -117,7 +127,7 @@ private fun NavToolbarItem(
     )
     Row(
         modifier = modifier
-            .heightIn(min = 52.dp)
+            .sizeIn(minWidth = 52.dp, minHeight = 52.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -132,16 +142,32 @@ private fun NavToolbarItem(
                 onClick = onClick,
             )
             .semantics { contentDescription = label }
-            .padding(horizontal = 8.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            modifier = Modifier.size(22.dp),
-            tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
+        CompositionLocalProvider(
+            LocalContentColor provides if (selected) MaterialTheme.colorScheme.onPrimaryContainer
                 else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+            )
+            AnimatedVisibility(
+                visible = selected,
+                enter = fadeIn() + expandHorizontally(MaterialTheme.motionScheme.defaultSpatialSpec()),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                Text(
+                    text = label,
+                    modifier = Modifier.padding(start = 6.dp).clearAndSetSemantics {},
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelLargeEmphasized,
+                )
+            }
+        }
     }
 }
